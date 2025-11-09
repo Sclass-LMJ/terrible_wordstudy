@@ -11,6 +11,15 @@ body {
     padding-bottom: 80px;
 }
 
+/* 데스크탑 최대 너비 제한 */
+.header,
+.page,
+.nav-bar {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 /* 헤더 */
 .header {
     background: rgba(255, 255, 255, 0.95);
@@ -650,6 +659,13 @@ tr:hover {
     flex-direction: column;
     gap: 10px;
     max-width: 350px;
+}
+
+/* 데스크탑에서 토스트 위치 조정 */
+@media (min-width: 840px) {
+    #toastContainer {
+        right: calc(50% - 380px);
+    }
 }
 
 .toast {
