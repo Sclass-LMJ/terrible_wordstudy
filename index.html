@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>일본어 학습</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="header">
+        <h1>📚 일본어 학습</h1>
+        <div class="header-actions">
+            <button class="filter-btn" onclick="toggleFilter()">🔍 필터</button>
+            <button class="filter-btn" onclick="randomizeWords()">🔀 랜덤</button>
+        </div>
+    </div>
+
+    <!-- 필터 모달 -->
+    <div class="modal" id="filterModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">🔍 필터 설정</div>
+                <button class="modal-close" onclick="closeFilterModal()">×</button>
+            </div>
+            
+            <div class="filter-group">
+                <label>레벨 선택:</label>
+                <div class="filter-options">
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="L1"> L1
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="L2"> L2
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="L3"> L3
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="L4"> L4
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="L5"> L5
+                    </label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>품사 선택:</label>
+                <div class="filter-options">
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="noun"> 명사
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="verb"> 동사
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="adj-i"> い형용사
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="adj-na"> な형용사
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="adv"> 부사
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" value="other"> 기타
+                    </label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>오답률:</label>
+                <div class="filter-range">
+                    <input type="number" id="wrongRateMin" min="0" max="100" value="0" placeholder="0">
+                    <span>% 이상</span>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>공부 기간:</label>
+                <div class="filter-date-range">
+                    <input type="date" id="studyDateFrom" placeholder="시작일">
+                    <span>~</span>
+                    <input type="date" id="studyDateTo" placeholder="종료일">
+                </div>
+                <small style="color: #999; font-size: 12px; margin-top: 5px; display: block;">
+                    * 해당 기간에 공부한 단어만 표시 (한국 시간 기준)
+                </small>
+            </div>
+
+            <div class="filter-actions">
+                <button class="btn btn-primary" onclick="applyFilter()">적용</button>
+                <button class="btn btn-secondary" onclick="resetFilter()">초기화</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 1: 카드 리스트 -->
+    <div class="page active" id="page1">
+        <div class="card-list" id="cardList">
+            <div class="loading">단어를 불러오는 중...</div>
+        </div>
+    </div>
+
+    <!-- Page 2: 슬라이드 -->
+    <div class="page" id="page2">
+        <div class="slide-container">
+            <div class="slide-card" id="slideCard">
+                <div class="loading">단어를 불러오는 중...</div>
+            </div>
+            <div class="slide-controls">
+                <button class="slide-btn" onclick="previousSlide()">◀</button>
+                <div class="auto-play">
+                    <label>자동 넘김:</label>
+                    <input type="number" id="autoPlayInterval" value="3" min="1" max="10">
+                    <label>초</label>
+                    <button id="autoPlayBtn" onclick="toggleAutoPlay()">시작</button>
+                </div>
+                <button class="slide-btn" onclick="nextSlide()">▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 3: 관리 -->
+    <div class="page" id="page3">
+        <div class="manage-header">
+            <div class="manage-title">단어 관리</div>
+            <button class="btn-add" onclick="showAddModal()">➕ 신규 저장</button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>단어</th>
+                        <th>한자</th>
+                        <th>뜻</th>
+                        <th>레벨</th>
+                        <th>O</th>
+                        <th>X</th>
+                        <th>오답률</th>
+                    </tr>
+                </thead>
+                <tbody id="wordTable">
+                    <tr><td colspan="7" class="loading" style="color: #333;">로딩 중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 네비게이션 -->
+    <div class="nav-bar">
+        <button class="nav-btn active" onclick="showPage(1)">목록</button>
+        <button class="nav-btn" onclick="showPage(2)">슬라이드</button>
+        <button class="nav-btn" onclick="showPage(3)">관리</button>
+    </div>
+
+    <!-- 문장 모달 -->
+    <div class="modal" id="sentenceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">문장 예시</div>
+                <button class="modal-close" onclick="closeSentenceModal()">×</button>
+            </div>
+            <div id="sentenceList"></div>
+        </div>
+    </div>
+
+    <!-- 단어 추가/수정 모달 -->
+    <div class="modal" id="wordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="wordModalTitle">단어 추가</div>
+                <button class="modal-close" onclick="closeWordModal()">×</button>
+            </div>
+            <form id="wordForm">
+                <input type="hidden" id="wordId">
+                <div class="form-group">
+                    <label>단어 (히라가나) *</label>
+                    <input type="text" id="word" required>
+                </div>
+                <div class="form-group">
+                    <label>한자</label>
+                    <input type="text" id="kanji">
+                </div>
+                <div class="form-group">
+                    <label>뜻 (한국어) *</label>
+                    <input type="text" id="meaning_ko" required>
+                </div>
+                <div class="form-group">
+                    <label>한국어 발음</label>
+                    <input type="text" id="pron_ko">
+                </div>
+                <div class="form-group">
+                    <label>비고</label>
+                    <textarea id="note" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>레벨</label>
+                    <select id="level">
+                        <option value="">선택 안함</option>
+                        <option value="L1">L1</option>
+                        <option value="L2">L2</option>
+                        <option value="L3">L3</option>
+                        <option value="L4">L4</option>
+                        <option value="L5">L5</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>품사</label>
+                    <select id="pos">
+                        <option value="noun">명사 (noun)</option>
+                        <option value="verb">동사 (verb)</option>
+                        <option value="adj-i">い형용사 (adj-i)</option>
+                        <option value="adj-na">な형용사 (adj-na)</option>
+                        <option value="adv">부사 (adv)</option>
+                        <option value="other">기타</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">저장</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeWordModal()">취소</button>
+                    <button type="button" class="btn btn-danger" id="deleteBtn" style="display: none;" onclick="deleteWord()">삭제</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 토스트 알림 -->
+    <div id="toastContainer"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
